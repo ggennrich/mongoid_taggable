@@ -13,26 +13,22 @@
 # limitations under the License.
 
 module Mongoid::Taggable
-  def self.included(base)
+  extend ActiveSupport::Concern
+  
+  included do
     # create fields for tags and index it
-    base.field :tags_array, :type => Array, :default => []
-    base.index({tags_array: 1}, {drop_dups: true})
-
+    self.field :tags_array, :type => Array, :default => []
+    self.index({tags_array: 1}, {drop_dups: true})
+    
     # add callback to save tags index
-    base.after_save do |document|
-      if document.tags_array_changed
-        document.class.save_tags_index!
-        document.tags_array_changed = false
-      end
-    end
+    after_save :build_index
 
     # extend model
-    base.extend         ClassMethods
-    base.send :include, InstanceMethods
-    base.send :attr_accessor, :tags_array_changed
+    include InstanceMethods
+    attr_accessor :tags_array_changed
 
     # enable indexing as default
-    base.enable_tags_index!
+    self.enable_tags_index!
   end
 
   module ClassMethods
@@ -103,8 +99,8 @@ module Mongoid::Taggable
 
         return count;
       }"
-
-     self.map_reduce(map, reduce).out(merge: tags_index_collection_name)
+      
+      self.map_reduce(map, reduce).out(merge: tags_index_collection_name)
     end
   end
 
@@ -116,6 +112,13 @@ module Mongoid::Taggable
     def tags=(tags)
       self.tags_array = tags.split(self.class.tags_separator).map(&:strip).reject(&:blank?)
       @tags_array_changed = true
+    end
+    
+    private
+    
+    def build_index
+      self.class.save_tags_index! if @tags_array_changed
+      @tags_array_changed = false
     end
   end
 end
