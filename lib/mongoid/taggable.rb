@@ -25,7 +25,6 @@ module Mongoid::Taggable
 
     # extend model
     include InstanceMethods
-    attr_accessor :tags_array_changed
 
     # enable indexing as default
     self.enable_tags_index!
@@ -79,7 +78,7 @@ module Mongoid::Taggable
 
     def save_tags_index!
       return unless @do_tags_index
-
+      
       map = "function() {
         if (!this.tags_array) {
           return;
@@ -99,8 +98,8 @@ module Mongoid::Taggable
 
         return count;
       }"
-      
-      self.map_reduce(map, reduce).out(merge: tags_index_collection_name)
+
+      self.map_reduce(map, reduce).out(replace: tags_index_collection_name).inspect
     end
   end
 
@@ -111,14 +110,12 @@ module Mongoid::Taggable
 
     def tags=(tags)
       self.tags_array = tags.split(self.class.tags_separator).map(&:strip).reject(&:blank?)
-      @tags_array_changed = true
     end
     
     private
     
     def build_index
-      self.class.save_tags_index! if @tags_array_changed
-      @tags_array_changed = false
+      self.class.save_tags_index! if self.tags_array_changed?
     end
   end
 end
