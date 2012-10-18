@@ -44,6 +44,10 @@ module Mongoid::Taggable
     def tagged_with_any(*tags)
       self.any_in(:tags_array => tags.flatten)
     end
+    
+    def tags_like(*tags, limit=10, sort=1)
+      tags_index_collection.find(:_id => /#{tags}/).limit(limit).sort(:_id => sort).map{ |r| [r["_id"] }
+    end
 
     def tags
       tags_index_collection.find.to_a.map{ |r| r["_id"] }
