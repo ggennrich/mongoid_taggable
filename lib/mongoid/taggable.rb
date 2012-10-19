@@ -28,6 +28,9 @@ module Mongoid::Taggable
 
     # enable indexing as default
     self.enable_tags_index!
+    
+    # one tag collection for all
+    self.single_tag_collection!
   end
 
   module ClassMethods
@@ -66,6 +69,14 @@ module Mongoid::Taggable
     def enable_tags_index!
       @do_tags_index = true
     end
+    
+    def single_tag_collection!
+      @single_collection = true
+    end
+    
+    def multiple_tag_collections!
+      @single_collection = false
+    end
 
     def tags_separator(separator = nil)
       @tags_separator = separator if separator
@@ -73,7 +84,7 @@ module Mongoid::Taggable
     end
 
     def tags_index_collection_name
-      "#{collection_name}_tags_index"
+      @single_collection ? "full_tags_index" : "#{collection_name}_tags_index"
     end
 
     def tags_index_collection
@@ -103,7 +114,7 @@ module Mongoid::Taggable
         return count;
       }"
 
-      self.map_reduce(map, reduce).out(replace: tags_index_collection_name).inspect
+      self.map_reduce(map, reduce).out(merge: tags_index_collection_name).inspect
     end
   end
 
