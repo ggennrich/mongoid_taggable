@@ -45,8 +45,8 @@ module Mongoid::Taggable
       self.any_in(:tags_array => tags.flatten)
     end
     
-    def tags_like(*tags, limit=10, sort=1)
-      tags_index_collection.find(:_id => /#{tags}/).limit(limit).sort(:_id => sort).map{ |r| [r["_id"] }
+    def tags_like(tag, limit=10, sort=1)
+      tags_index_collection.find(:_id => /#{tag}/).limit(limit).sort(:_id => sort).map{ |r| [r["_id"]] }
     end
 
     def tags
@@ -77,7 +77,7 @@ module Mongoid::Taggable
     end
 
     def tags_index_collection
-      @@tags_index_collection ||= Moped::Collection.new(self.collection.database, tags_index_collection_name)
+      Moped::Collection.new(self.collection.database, tags_index_collection_name)
     end
 
     def save_tags_index!
