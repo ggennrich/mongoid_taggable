@@ -30,7 +30,7 @@ module Mongoid::Taggable
     self.enable_tags_index!
     
     # one tag collection for all
-    self.single_tag_collection!
+    self.multiple_tag_collections!
   end
 
   module ClassMethods
